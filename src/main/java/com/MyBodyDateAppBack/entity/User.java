@@ -15,9 +15,12 @@ public class User {
         return id;
     }
 
-    public void setId(String id) {
+
+    public String setId(String id) {
         this.id = id;
+        return id;
     }
+
     public String getName() {
         return name;
     }
