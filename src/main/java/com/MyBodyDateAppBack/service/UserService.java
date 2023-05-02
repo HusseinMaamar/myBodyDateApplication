@@ -19,7 +19,7 @@ public class UserService {
     String formattedDate = formatter.format(currentDate);
     public  String saveUser(User user) throws ExecutionException, InterruptedException {
         Firestore dbFirestore = FirestoreClient.getFirestore();
-        ApiFuture<WriteResult> collectionApiFuture = dbFirestore.collection(COLLECTION_NAME).document(user.setId(formattedDate+2)).set(user);
+        ApiFuture<WriteResult> collectionApiFuture = dbFirestore.collection(COLLECTION_NAME).document(user.setId(formattedDate+3)).set(user);
         return collectionApiFuture.get().getUpdateTime().toString();
     }
 }
