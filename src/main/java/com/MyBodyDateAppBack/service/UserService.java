@@ -24,7 +24,7 @@ public class UserService {
         ApiFuture<WriteResult> collectionApiFuture = dbFirestore.collection(COLLECTION_NAME).document(user.setId(formattedDate+11)).set(user);
         return collectionApiFuture.get().getUpdateTime().toString();
     }*/
-    GeoPoint location = new GeoPoint(45,59);
+    GeoPoint location = new GeoPoint(45,85);
     public String saveUser(User user) throws ExecutionException, InterruptedException {
         user.setLocation(location);
         Firestore dbFirestore = FirestoreClient.getFirestore();
