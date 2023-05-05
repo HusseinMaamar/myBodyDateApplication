@@ -1,5 +1,6 @@
 package com.MyBodyDateAppBack;
 
+import com.google.cloud.firestore.GeoPoint;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -20,6 +21,7 @@ public class MyBodyDateAppBackApplication {
 		SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyy");
 		String formattedDate = formatter.format(currentDate);
 		System.out.println("Current date and time: " + formattedDate);
+
 	}
 
 }
