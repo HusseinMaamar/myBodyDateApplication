@@ -15,7 +15,7 @@ public class MyBodyDateAppBackApplication {
 		UUID uuid = UUID.randomUUID();
 		String uniqueId = uuid.toString();
 		System.out.println("Generated Unique ID: " + uniqueId);
-		System.out.println("lisen to 8080");
+		System.out.println("listen to 8080");
 		Date currentDate = new Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyy");
 		String formattedDate = formatter.format(currentDate);

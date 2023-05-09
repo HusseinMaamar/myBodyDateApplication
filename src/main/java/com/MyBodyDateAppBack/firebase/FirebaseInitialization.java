@@ -19,10 +19,9 @@ public class FirebaseInitialization {
         try {
             serviceAccount = new FileInputStream("./serviceAccountKey.json");
 
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
-
+            FirebaseOptions options = FirebaseOptions.builder()
+        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+        .build();
         FirebaseApp.initializeApp(options);
         } catch (Exception e) {
           e.printStackTrace();
