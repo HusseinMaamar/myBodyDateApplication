@@ -1,79 +1,107 @@
 package com.MyBodyDateAppBack.service;
 
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.MyBodyDateAppBack.entity.User;
 import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.WriteResult;
-import com.google.firebase.cloud.FirestoreClient;
-import org.springframework.stereotype.Service;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.ExecutionException;
+import com.google.cloud.firestore.Query;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
 
 @Service
 public class UserService {
-    private static final String COLLECTION_NAME = "Users";
-    Date currentDate = new Date();
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-    String formattedDate = formatter.format(currentDate);
 
-    public User createUser(User user) {
-        Firestore dbFirestore = FirestoreClient.getFirestore();
-        DocumentReference documentReference = dbFirestore.collection(COLLECTION_NAME).document(user.getId());
-        ApiFuture<WriteResult> future = documentReference.create(user); // Utiliser create() au lieu de set()
-        try {
-            future.get(); // Attendre la fin de l'opération
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            // Gérer l'exception selon votre logique
+    private static final String COLLECTION_NAME = "users";
+
+    @Autowired
+    private Firestore firestore;
+
+    public String saveUser(User user) throws InterruptedException, ExecutionException {
+        Date currentDate = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+        String formattedDate = formatter.format(currentDate);
+        CollectionReference collectionReference = firestore.collection(COLLECTION_NAME);
+        Query query = collectionReference.orderBy("id", Query.Direction.DESCENDING).limit(1);
+        ApiFuture<QuerySnapshot> future = query.get();
+        QuerySnapshot querySnapshot = future.get();
+        int lastId = 0;
+        if (!querySnapshot.isEmpty()) {
+            lastId = Integer.parseInt(querySnapshot.getDocuments().get(0).getId().substring(8));
         }
-        return user;
+        int newId = lastId + 1;
+        String id = formattedDate + "-" + newId;
+        DocumentReference documentReference = collectionReference.document(id);
+        ApiFuture<DocumentSnapshot> futureDoc = documentReference.get();
+        DocumentSnapshot document = futureDoc.get();
+        if (document.exists()) {
+            return "User with ID " + user.getId() + " already exists.";
+        } else {
+            user.setId(id);
+            documentReference.set(user).get();
+            return "User with ID " + user.getId() + " successfully created.";
+        }
     }
 
-    public User getUser(String id) {
-        Firestore dbFirestore = FirestoreClient.getFirestore();
-        DocumentReference documentReference = dbFirestore.collection(COLLECTION_NAME).document(id);
+    public User getUserById(String id) throws InterruptedException, ExecutionException {
+        DocumentReference documentReference = firestore.collection(COLLECTION_NAME).document(id);
         ApiFuture<DocumentSnapshot> future = documentReference.get();
-        DocumentSnapshot document;
-        try {
-            document = future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            // Gérer l'exception selon votre logique
+        DocumentSnapshot document = future.get();
+        if (document.exists()) {
+            return document.toObject(User.class);
+        } else {
             return null;
         }
-        User user = null;
+    }
+
+    public List<User> getAllUsers() throws InterruptedException, ExecutionException {
+        CollectionReference collectionReference = firestore.collection(COLLECTION_NAME);
+        ApiFuture<QuerySnapshot> future = collectionReference.get();
+        QuerySnapshot querySnapshot = future.get();
+        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+        return documents.stream().map(doc -> doc.toObject(User.class)).collect(Collectors.toList());
+    }
+
+    public List<User> getUsersByCity(String city) throws InterruptedException, ExecutionException {
+        CollectionReference collectionReference = firestore.collection(COLLECTION_NAME);
+        Query query = collectionReference.whereEqualTo("city", city);
+        ApiFuture<QuerySnapshot> future = query.get();
+        QuerySnapshot querySnapshot = future.get();
+        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+        return documents.stream().map(doc -> doc.toObject(User.class)).collect(Collectors.toList());
+    }
+
+    public String updateUser(User user) throws InterruptedException, ExecutionException {
+        DocumentReference documentReference = firestore.collection(COLLECTION_NAME).document(user.getId());
+        ApiFuture<DocumentSnapshot> future = documentReference.get();
+        DocumentSnapshot document = future.get();
         if (document.exists()) {
-            user = document.toObject(User.class);
+            documentReference.set(user).get();
+            return "User with ID " + user.getId() + " successfully updated.";
+        } else {
+            return "User with ID " + user.getId() + " does not exist.";
         }
-        return user;
     }
 
-    public User updateUser(String id, User user) {
-        Firestore dbFirestore = FirestoreClient.getFirestore();
-        DocumentReference documentReference = dbFirestore.collection(COLLECTION_NAME).document(id);
-        ApiFuture<WriteResult> future = documentReference.set(user); // Utiliser set()
-        try {
-            future.get(); // Attendre la fin de l'opération
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            // Gérer l'exception selon votre logique
-        }
-        return user;
-    }
-
-    public void deleteUser(String id) {
-        Firestore dbFirestore = FirestoreClient.getFirestore();
-        DocumentReference documentReference = dbFirestore.collection(COLLECTION_NAME).document(id);
-        ApiFuture<WriteResult> future = documentReference.delete();
-        try {
-            future.get(); // Attendre la fin de l'opération
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            // Gérer l'exception selon votre logique
+    public String deleteUser(String id) throws InterruptedException, ExecutionException {
+        DocumentReference documentReference = firestore.collection(COLLECTION_NAME).document(id);
+        ApiFuture<DocumentSnapshot> future = documentReference.get();
+        DocumentSnapshot document = future.get();
+        if (document.exists()) {
+            documentReference.delete().get();
+            return "User with ID " + id + " successfully deleted.";
+        } else {
+            return "User with ID " + id + " does not exist.";
         }
     }
 }
