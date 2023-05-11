@@ -1,13 +1,12 @@
 package com.MyBodyDateAppBack.entity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
-import com.google.cloud.StringEnumType;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.GeoPoint;
 
+import com.google.cloud.firestore.annotation.ServerTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,7 +24,6 @@ public class User {
     private String city;
     private GeoPoint location;
     private String dynamicGeolocation;
-    private LocalDateTime dateOfCreation;
     private String id;
     private boolean loveCoatch;
     private boolean multiProfil;
@@ -49,6 +47,21 @@ public class User {
     private ArrayList<Affinity> affinities;
     private LifeStyle lifeStyle;
     private ArrayList<LifeStyle2> lifeStyle2;
+    @ServerTimestamp
+    private Timestamp dateCreation ;
+
+    public User(String id) {
+        this.id = id;
+        this.mail= "tata55@gmail.com";
+        this.dateCreation = null ; //Timestamp.of(new Date());
+    }
+
+
+
+    public String setId(String id) {
+        this.id = id;
+        return id;
+    }
 
     public enum Role {
         INVITE,
